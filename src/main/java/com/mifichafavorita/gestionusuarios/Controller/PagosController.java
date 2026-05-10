@@ -47,7 +47,9 @@ public class PagosController {
             return ResponseEntity.status(HttpStatus.ACCEPTED).body(ok);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            HttpGlobalResponse<String> err = new HttpGlobalResponse<>();
+            err.setMessage("Error al procesar el pago");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(err);
         }
     }
 }

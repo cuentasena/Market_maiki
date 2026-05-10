@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.mifichafavorita.gestionusuarios.dto.ActualizarCuentaRequestDTO;
@@ -21,6 +22,11 @@ public class UserService {
      * Repositorio del usuario
      */
     private final UserRepository userRepository;
+
+    /**
+     * Encriptación de contraseña al actualizar cuenta
+     */
+    private final PasswordEncoder passwordEncoder;
 
     public List<UserResponseDTO> listUsers() {
         List<Users> usersFound = userRepository.findAll();
@@ -48,6 +54,9 @@ public class UserService {
         }
         if (datos.getAge() != null) {
             u.setAge(datos.getAge());
+        }
+        if (datos.getPassword() != null && !datos.getPassword().isBlank()) {
+            u.setPassword(passwordEncoder.encode(datos.getPassword()));
         }
         userRepository.save(u);
         return Optional.of(mapearUsuario(u));

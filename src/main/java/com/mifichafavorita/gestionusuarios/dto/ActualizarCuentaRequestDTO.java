@@ -13,4 +13,9 @@ public class ActualizarCuentaRequestDTO {
      * Nueva edad (opcional)
      */
     private Long age;
+
+    /**
+     * Nueva contraseña (opcional); si se envía y no está vacía, reemplaza la actual (hash BCrypt).
+     */
+    private String password;
 }

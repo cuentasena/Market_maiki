@@ -29,25 +29,56 @@ public class UserController {
     private final UserService userService;
 
     /**
-     * Lista de usuarios: solo CAJERO.
+     * Lista de usuarios: solo CAJERO. Ante 403/400 el cuerpo lleva mensaje en JSON (HttpGlobalResponse).
      */
     @GetMapping("/list-users")
-    public ResponseEntity<List<UserResponseDTO>> listUsers(HttpServletRequest httpRequest) {
+    public ResponseEntity<Object> listUsers(HttpServletRequest httpRequest) {
         try {
             Long rolId = (Long) httpRequest.getAttribute("rolId");
             if (!RolEnum.CAJERO.coincide(rolId)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+                HttpGlobalResponse<String> denied = new HttpGlobalResponse<>();
+                denied.setMessage("Solo el rol CAJERO puede listar usuarios");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(denied);
             }
             List<UserResponseDTO> response = userService.listUsers();
             return ResponseEntity.status(HttpStatus.FOUND).body(response);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            HttpGlobalResponse<String> err = new HttpGlobalResponse<>();
+            err.setMessage("No se pudo obtener la lista de usuarios");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(err);
         }
     }
 
     /**
-     * Consultar datos propios: solo USUARIO.
+     * Perfil del usuario autenticado (CAJERO o USUARIO): mismos datos que en respuestas de usuario, sin listar a otros.
+     */
+    @GetMapping("/mi-perfil")
+    public ResponseEntity<HttpGlobalResponse<UserResponseDTO>> miPerfil(HttpServletRequest httpRequest) {
+        try {
+            Long userId = (Long) httpRequest.getAttribute("userId");
+            return userService.obtenerUsuarioPorId(userId)
+                    .map(u -> {
+                        HttpGlobalResponse<UserResponseDTO> ok = new HttpGlobalResponse<>();
+                        ok.setMessage("Tu perfil");
+                        ok.setData(u);
+                        return ResponseEntity.status(HttpStatus.ACCEPTED).body(ok);
+                    })
+                    .orElseGet(() -> {
+                        HttpGlobalResponse<UserResponseDTO> nf = new HttpGlobalResponse<>();
+                        nf.setMessage("Usuario no encontrado");
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(nf);
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
+            HttpGlobalResponse<UserResponseDTO> err = new HttpGlobalResponse<>();
+            err.setMessage("Error al consultar el perfil");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(err);
+        }
+    }
+
+    /**
+     * Consultar datos propios: solo USUARIO (vista “cuenta cliente”).
      */
     @GetMapping("/mi-cuenta")
     public ResponseEntity<HttpGlobalResponse<UserResponseDTO>> miCuenta(HttpServletRequest httpRequest) {
@@ -66,15 +97,21 @@ public class UserController {
                         ok.setData(u);
                         return ResponseEntity.status(HttpStatus.ACCEPTED).body(ok);
                     })
-                    .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
+                    .orElseGet(() -> {
+                        HttpGlobalResponse<UserResponseDTO> nf = new HttpGlobalResponse<>();
+                        nf.setMessage("Usuario no encontrado");
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(nf);
+                    });
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            HttpGlobalResponse<UserResponseDTO> err = new HttpGlobalResponse<>();
+            err.setMessage("Error en la solicitud");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(err);
         }
     }
 
     /**
-     * Actualizar nombre/edad de la cuenta propia: solo USUARIO.
+     * Actualizar nombre, edad y/o contraseña de la cuenta propia: solo USUARIO.
      */
     @PatchMapping("/mi-cuenta")
     public ResponseEntity<HttpGlobalResponse<UserResponseDTO>> actualizarMiCuenta(HttpServletRequest httpRequest,
@@ -94,10 +131,16 @@ public class UserController {
                         ok.setData(u);
                         return ResponseEntity.status(HttpStatus.ACCEPTED).body(ok);
                     })
-                    .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
+                    .orElseGet(() -> {
+                        HttpGlobalResponse<UserResponseDTO> nf = new HttpGlobalResponse<>();
+                        nf.setMessage("Usuario no encontrado");
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(nf);
+                    });
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            HttpGlobalResponse<UserResponseDTO> err = new HttpGlobalResponse<>();
+            err.setMessage("Error al actualizar la cuenta");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(err);
         }
     }
 }
