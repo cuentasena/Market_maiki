@@ -2,30 +2,26 @@ package com.mifichafavorita.gestionusuarios.dto;
 
 import lombok.Data;
 
+/**
+ * Vista de usuario segura para exponer en la API: no incluye la contraseña.
+ * Sirve para listados, perfil y cuenta propia.
+ */
 @Data
 public class UserResponseDTO {
-    /**
-     * Id del usuario
-     */
+    /** Identificador del usuario en base de datos. */
     private Long id;
 
-    /**
-     * Nombre del usuario
-     */
+    /** Nombre visible. */
     private String name;
 
-    /**
-     * Email del usuario
-     */
+    /** Correo electrónico. */
     private String email;
 
-    /**
-     * Edad del usuario
-     */
+    /** Edad. */
     private Long age;
 
     /**
-     * Rol del usuario
+     * Identificador numérico del rol ({@code 1} = CAJERO, {@code 2} = USUARIO), alineado con {@code rol_id} en BD.
      */
     private Long rol;
 }

@@ -18,31 +18,30 @@ import com.mifichafavorita.gestionusuarios.enums.RolEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
+/**
+ * Lógica de autenticación: alta de usuarios, login y refresco de token.
+ * Las contraseñas se persisten solo con hash BCrypt.
+ */
 @Service
 @RequiredArgsConstructor
 @Log4j2
 public class AuthService {
 
-    /**
-     * Repositorio de usuarios
-     */
+    /** Acceso a persistencia de {@link com.mifichafavorita.gestionusuarios.entity.Users}. */
     private final UserRepository userRepository;
 
-    /**
-     * Encriptación de contraseñas
-     */
+    /** Codificación y comparación segura de contraseñas. */
     private final PasswordEncoder passwordEncoder;
 
-    /**
-     * Servicio de jwt
-     */
+    /** Generación y refresco de JWT tras login exitoso. */
     private final JwtService jwtService;
 
     /**
-     * Registro de usuario
-     * 
-     * @param request
-     * @return RegisterResponseDTO
+     * Registra un usuario nuevo. Si no se envía rol, se asigna {@link RolEnum#USUARIO}.
+     * Valida que {@code rol} sea solo 1 (CAJERO) o 2 (USUARIO).
+     *
+     * @param request datos del formulario de registro (validados en controlador con {@code @Valid})
+     * @return mensaje de éxito o de error de negocio (correo duplicado, rol inválido)
      */
     public RegisterResponseDTO register(RegisterRequestDTO request) {
         RegisterResponseDTO response = new RegisterResponseDTO();
@@ -74,10 +73,10 @@ public class AuthService {
     }
 
     /**
-     * Inicio de sesión de usuario
-     * 
-     * @param request
-     * @return HttpGlobalResponse<JwtDTO>
+     * Autentica por correo y contraseña; si coincide, devuelve JWT con {@code userId} y {@code rolId}.
+     *
+     * @param request correo y contraseña en texto plano (esta última se compara con el hash guardado)
+     * @return envoltorio con mensaje y, si aplica, {@link JwtDTO} con el token
      */
     public HttpGlobalResponse<JwtDTO> login(LoginRequestDTO request) {
         HttpGlobalResponse<JwtDTO> response = new HttpGlobalResponse<>();
@@ -104,11 +103,11 @@ public class AuthService {
     }
 
     /**
-     * Refresco del JWT
-     * 
-     * @param token
-     * @return JwtDTO
-     * @throws Exception
+     * Solicita un nuevo JWT a partir de uno aún válido (delega en {@link JwtService#refreshToken(String)}).
+     *
+     * @param token JWT actual (sin prefijo {@code Bearer})
+     * @return DTO con el nuevo token
+     * @throws Exception si el token no puede refrescarse
      */
     public JwtDTO refreshToken(String token) throws Exception{
         JwtDTO response = new JwtDTO();

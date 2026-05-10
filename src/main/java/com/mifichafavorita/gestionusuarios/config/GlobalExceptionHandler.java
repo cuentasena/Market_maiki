@@ -13,11 +13,19 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.mifichafavorita.gestionusuarios.dto.HttpGlobalResponse;
 
+/**
+ * Manejo centralizado de excepciones para todos los controladores REST.
+ * Devuelve respuestas JSON uniformes ({@link HttpGlobalResponse}) ante errores de validación o JSON inválido.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     /**
-     * Errores @Valid en cuerpos JSON (@RequestBody).
+     * Respuesta cuando fallan las validaciones {@code jakarta.validation} activadas con {@code @Valid}
+     * en el cuerpo {@code @RequestBody}.
+     *
+     * @param ex excepción con detalle por campo ({@link MethodArgumentNotValidException#getBindingResult()})
+     * @return HTTP 400 con mensaje global y mapa campo → mensaje en {@code data}
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<HttpGlobalResponse<Map<String, String>>> handleValidation(
@@ -36,7 +44,10 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * JSON mal formado o tipo incompatible.
+     * Respuesta cuando el JSON no se puede leer (sintaxis incorrecta, tipo incompatible, cuerpo vacío indebido).
+     *
+     * @param ex excepción de deserialización
+     * @return HTTP 400 con mensaje descriptivo
      */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<HttpGlobalResponse<String>> handleNotReadable(HttpMessageNotReadableException ex) {

@@ -6,9 +6,19 @@ import org.springframework.context.annotation.Configuration;
 
 import com.mifichafavorita.gestionusuarios.filter.JwtValidationFilter;
 
-// Fabrica de beans (springboot al arrancar lee la app para configurar el comportamiento de esta misma)
+/**
+ * Registra beans relacionados con filtros servlet.
+ * Al arrancar, Spring lee esta clase y publica el filtro JWT en el contenedor.
+ */
 @Configuration
 public class FilterConfig {
+
+    /**
+     * Registra {@link JwtValidationFilter} para todas las URLs ({@code /*}) con orden de ejecución 0.
+     *
+     * @param jwtValidationFilter filtro inyectado por Spring (componente)
+     * @return bean que asocia el filtro al DispatcherServlet
+     */
     @Bean
     FilterRegistrationBean<JwtValidationFilter> jwtFilter(JwtValidationFilter jwtValidationFilter) {
         // Creamos un contenedor de registro del bean para el filtro

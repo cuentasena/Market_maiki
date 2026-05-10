@@ -20,17 +20,25 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * API REST de usuarios: listado para personal de caja y gestión de perfil/cuenta según rol.
+ * Requiere JWT válido (excepto rutas bajo {@code /auth}). Los atributos {@code userId} y {@code rolId}
+ * los coloca {@link com.mifichafavorita.gestionusuarios.filter.JwtValidationFilter}.
+ */
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
 public class UserController {
-    /**
-     * Servicio de usuarios
-     */
+
+    /** Servicio de consulta y actualización de usuarios. */
     private final UserService userService;
 
     /**
-     * Lista de usuarios: solo CAJERO. Ante 403/400 el cuerpo lleva mensaje en JSON (HttpGlobalResponse).
+     * Lista completa de usuarios en formato DTO.
+     * Solo el rol {@link RolEnum#CAJERO} puede invocarla; si no, HTTP 403 con mensaje JSON.
+     *
+     * @param httpRequest petición con atributos {@code rolId} inyectados por el filtro JWT
+     * @return lista en éxito (302 FOUND); en error de permiso u operación, {@link HttpGlobalResponse} u objeto de error
      */
     @GetMapping("/list-users")
     public ResponseEntity<Object> listUsers(HttpServletRequest httpRequest) {
@@ -52,7 +60,10 @@ public class UserController {
     }
 
     /**
-     * Perfil del usuario autenticado (CAJERO o USUARIO): mismos datos que en respuestas de usuario, sin listar a otros.
+     * Datos del usuario identificado por el token (cajero o usuario final).
+     *
+     * @param httpRequest debe incluir {@code userId} del JWT
+     * @return perfil envuelto en {@link HttpGlobalResponse}
      */
     @GetMapping("/mi-perfil")
     public ResponseEntity<HttpGlobalResponse<UserResponseDTO>> miPerfil(HttpServletRequest httpRequest) {
@@ -79,7 +90,10 @@ public class UserController {
     }
 
     /**
-     * Consultar datos propios: solo USUARIO (vista “cuenta cliente”).
+     * Vista “mi cuenta” exclusiva del rol {@link RolEnum#USUARIO} (cliente).
+     *
+     * @param httpRequest petición con {@code rolId} y {@code userId}
+     * @return mismos datos que {@link #miPerfil(HttpServletRequest)} pero con control de rol USUARIO
      */
     @GetMapping("/mi-cuenta")
     public ResponseEntity<HttpGlobalResponse<UserResponseDTO>> miCuenta(HttpServletRequest httpRequest) {
@@ -112,7 +126,12 @@ public class UserController {
     }
 
     /**
-     * Actualizar nombre, edad y/o contraseña de la cuenta propia: solo USUARIO.
+     * Actualización parcial de la cuenta del cliente (nombre, edad, contraseña opcional).
+     * Solo {@link RolEnum#USUARIO}; el cuerpo se valida con {@code @Valid}.
+     *
+     * @param httpRequest petición con {@code rolId} y {@code userId}
+     * @param request     campos opcionales a modificar
+     * @return usuario actualizado en {@code data}
      */
     @PatchMapping("/mi-cuenta")
     public ResponseEntity<HttpGlobalResponse<UserResponseDTO>> actualizarMiCuenta(HttpServletRequest httpRequest,

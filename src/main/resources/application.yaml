@@ -1,3 +1,8 @@
+# Configuración principal de Spring Boot (Mi Ficha Favorita / gestión de usuarios).
+# - spring.* : nombre de la app, conexión MySQL y comportamiento JPA.
+# - server.* : puerto HTTP y prefijo de todas las rutas (context-path); los controllers usan rutas relativas a /api/v1/
+# - security.jwt.* : firma y vida útil del token; debe coincidir con JwtService y el filtro JWT.
+
 spring:
   application:
     name: gestionusuarios

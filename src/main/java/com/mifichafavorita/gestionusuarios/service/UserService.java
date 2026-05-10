@@ -14,20 +14,25 @@ import com.mifichafavorita.gestionusuarios.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Operaciones de lectura y actualización de usuarios para exponer en la API (listados y perfil propio).
+ * No implementa registro ni login; eso está en {@link AuthService}.
+ */
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
-    /**
-     * Repositorio del usuario
-     */
+    /** Repositorio JPA de usuarios. */
     private final UserRepository userRepository;
 
-    /**
-     * Encriptación de contraseña al actualizar cuenta
-     */
+    /** Para hashear contraseña cuando el usuario actualiza su cuenta. */
     private final PasswordEncoder passwordEncoder;
 
+    /**
+     * Obtiene todos los registros de usuarios y los convierte a DTO (sin contraseña).
+     *
+     * @return lista para uso del endpoint de listado (restringido a CAJERO en el controlador)
+     */
     public List<UserResponseDTO> listUsers() {
         List<Users> usersFound = userRepository.findAll();
         List<UserResponseDTO> response = new ArrayList<>();
@@ -39,10 +44,23 @@ public class UserService {
         return response;
     }
 
+    /**
+     * Busca un usuario por id y lo devuelve como DTO público.
+     *
+     * @param id clave primaria
+     * @return optional vacío si no existe
+     */
     public Optional<UserResponseDTO> obtenerUsuarioPorId(Long id) {
         return userRepository.findById(id).map(this::mapearUsuario);
     }
 
+    /**
+     * Actualiza solo los campos enviados en el DTO (parcial). La contraseña, si viene no vacía, se re-hashea.
+     *
+     * @param id    usuario autenticado (coincide con token)
+     * @param datos nombre, edad y/o contraseña nueva
+     * @return usuario actualizado como DTO, o vacío si el id no existe
+     */
     public Optional<UserResponseDTO> actualizarMiCuenta(Long id, ActualizarCuentaRequestDTO datos) {
         Optional<Users> opt = userRepository.findById(id);
         if (opt.isEmpty()) {
@@ -62,6 +80,12 @@ public class UserService {
         return Optional.of(mapearUsuario(u));
     }
 
+    /**
+     * Copia campos seguros de la entidad al DTO de respuesta (nunca incluye {@code password}).
+     *
+     * @param users entidad persistida
+     * @return DTO para JSON
+     */
     private UserResponseDTO mapearUsuario(Users users) {
         UserResponseDTO user = new UserResponseDTO();
         user.setId(users.getId());

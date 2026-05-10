@@ -20,20 +20,23 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+/**
+ * Endpoints públicos y semi-públicos de autenticación bajo el prefijo {@code /auth}.
+ * El filtro JWT no intercepta estas rutas salvo {@code /refresh}, que exige header Bearer.
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/auth")
 public class AuthController {
-    /**
-     * Servicvio de autenticación
-     */
+
+    /** Servicio que concentra registro, login y refresco de token. */
     private final AuthService authService;
 
     /**
-     * Registro de usuario
-     * 
-     * @param request
-     * @return RegisterResponseDTO
+     * Alta de usuario. El cuerpo se valida con Bean Validation ({@code @Valid}).
+     *
+     * @param request datos de registro (nombre, correo, contraseña, edad, rol opcional)
+     * @return mensaje en {@link RegisterResponseDTO}; HTTP 202 si el servicio respondió sin excepción
      */
     @PostMapping("/register")
     public ResponseEntity<RegisterResponseDTO> register(@Valid @RequestBody RegisterRequestDTO request) {
@@ -49,10 +52,10 @@ public class AuthController {
     }
 
     /**
-     * Inicio de sesion del usuario
-     * 
-     * @param request
-     * @return HttpGlobalResponse<JwtDTO>
+     * Login con correo y contraseña; respuesta incluye JWT si las credenciales son correctas.
+     *
+     * @param request credenciales validadas con {@code @Valid}
+     * @return {@link HttpGlobalResponse} con mensaje y opcionalmente {@link JwtDTO}
      */
     @PostMapping("/login")
     public ResponseEntity<HttpGlobalResponse<JwtDTO>> login(@Valid @RequestBody LoginRequestDTO request) {
@@ -68,10 +71,10 @@ public class AuthController {
     }
 
     /**
-     * Refresco del jwt
-     * 
-     * @param request
-     * @return JwtDTO
+     * Renueva el JWT enviando el actual en {@code Authorization: Bearer &lt;token&gt;}.
+     *
+     * @param request petición HTTP para leer el header Authorization
+     * @return nuevo token en {@link JwtDTO} si la operación es válida
      */
     @GetMapping("/refresh")
     public ResponseEntity<JwtDTO> refreshToken(HttpServletRequest request) {

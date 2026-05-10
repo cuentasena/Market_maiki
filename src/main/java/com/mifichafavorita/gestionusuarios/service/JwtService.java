@@ -16,17 +16,17 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
+/**
+ * Servicio responsable de crear, validar y leer tokens JWT (JJWT).
+ * La clave y la vigencia se configuran en {@code application.yaml} bajo {@code security.jwt}.
+ */
 @Service
 public class JwtService {
-    /**
-     * Inyectamos la clave secreta en el service que viene del yaml
-     */
+    /** Clave secreta en Base64 para firmar y verificar el JWT. */
     @Value("${security.jwt.secret-key}")
     String secretKey;
 
-    /**
-     * Inyectamos la clave secreta en el service que viene del yaml
-     */
+    /** Tiempo de vida del token en milisegundos (ej. 600000 = 10 minutos). */
     @Value("${security.jwt.token-expiration}")
     Long tokenExpiration;
 
@@ -42,12 +42,13 @@ public class JwtService {
     }
 
     /**
-     * Generar el token de seguridad al iniciar sesion
-     * 
-     * @param userId
-     * @param rolId
-     * @param username
-     * @return jwt
+     * Genera el JWT al iniciar sesión. Incluye claims {@code userId} y {@code rolId} en un solo mapa
+     * para que ambos lleguen al cliente y al filtro.
+     *
+     * @param userId  identificador del usuario
+     * @param rolId   identificador numérico del rol (1 CAJERO, 2 USUARIO)
+     * @param username normalmente el correo; se guarda como {@code subject} del token
+     * @return cadena JWT firmada
      */
     public String generateToken(Long userId, Long rolId, String username) {
         return Jwts.builder()
@@ -60,10 +61,10 @@ public class JwtService {
     }
 
     /**
-     * Verifica si el token es válido
-     * 
-     * @param token
-     * @return boleano
+     * Comprueba firma y formato del token (no comprueba solo expiración aquí; el parser puede lanzar si está vencido).
+     *
+     * @param token JWT recibido del cliente
+     * @return {@code true} si el parser lo acepta como firma válida
      */
     public Boolean isTokenValid(String token) {
         try {
@@ -80,12 +81,12 @@ public class JwtService {
     }
 
     /**
-     * Extraer todos los claims del token
-     * 
-     * @param <T>
-     * @param token
-     * @param resolver
-     * @return
+     * Lee el payload del token y aplica una función para obtener un claim tipado.
+     *
+     * @param <T>      tipo de retorno deseado
+     * @param token    JWT válido
+     * @param resolver función que recibe {@link io.jsonwebtoken.Claims}
+     * @return valor extraído
      */
     public <T> T extractClaims(String token, Function<Claims, T> resolver) {
         final Claims claims = Jwts.parser()
@@ -98,19 +99,19 @@ public class JwtService {
     }
 
     /**
-     * Extraer el nombre de usuario del token
-     * 
-     * @param token
-     * @return nombre de usuario
+     * Obtiene el {@code subject} del token (correo u otro identificador configurado al generar el token).
+     *
+     * @param token JWT
+     * @return subject del token
      */
     public String extractUsername(String token) {
         return extractClaims(token, Claims::getSubject);
     }
 
     /**
-     * Extrae el id del usuario
-     * 
-     * @param token
+     * Obtiene el claim personalizado {@code userId}.
+     *
+     * @param token JWT
      * @return id del usuario
      */
     public Long extractUserId(String token) {
@@ -118,21 +119,22 @@ public class JwtService {
     }
 
     /**
-     * Extrae el rol del usuario
-     * 
-     * @param token
-     * @return rol del usuario
+     * Obtiene el claim personalizado {@code rolId}.
+     *
+     * @param token JWT
+     * @return id numérico del rol
      */
     public Long extractRolId(String token) {
         return extractClaims(token, claims -> claims.get("rolId", Long.class));
     }
 
     /**
-     * Refresco del token si no está expirado
-     * 
-     * @param token
-     * @return token
-     * @throws Exception
+     * Emite un nuevo JWT con la misma información si el token actual sigue siendo parseable
+     * (no permite refrescar si está expirado: lanza excepción).
+     *
+     * @param token JWT vigente
+     * @return nuevo JWT con nueva fecha de expiración
+     * @throws Exception si el token está expirado o es inválido
      */
     public String refreshToken(String token) throws Exception {
         Claims claims;

@@ -15,13 +15,22 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Operaciones de negocio relacionadas con cobros en punto de venta.
+ * El procesamiento simulado solo está permitido para el rol {@link RolEnum#CAJERO}.
+ */
 @RestController
 @RequestMapping("/pagos")
 @RequiredArgsConstructor
 public class PagosController {
 
     /**
-     * Solo CAJERO puede procesar pagos (rolId viene del filtro JWT).
+     * Registra un pago de demostración (no persiste transacción en otra tabla).
+     * Exige JWT y {@code rolId} correspondiente a cajero.
+     *
+     * @param httpRequest petición con {@code rolId} del filtro JWT
+     * @param request     monto obligatorio positivo y concepto opcional (validado con {@code @Valid})
+     * @return confirmación en {@link HttpGlobalResponse}; 403 si el rol no es cajero
      */
     @PostMapping("/procesar")
     public ResponseEntity<HttpGlobalResponse<String>> procesarPago(HttpServletRequest httpRequest,
