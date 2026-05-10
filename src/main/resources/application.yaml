@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: gestionusuarios
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/mi_ficha_favorita
+    username: root
+    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+
+server:
+  port: 9090
+  servlet:
+    context-path: /api/v1/
+
+security:
+  jwt:
+    # Genera llave secreta con openssl rand -base64 32
+    secret-key: ImIq9nynVF/OwzGrdCn718/u/GtPauAxV1fjmoK06Ts=
+    token-expiration: 600000 # 10 min expresado en ms
