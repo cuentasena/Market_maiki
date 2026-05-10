@@ -14,7 +14,7 @@ public enum RolEnum {
         return id;
     }
 
-    /** Compara el rol del token o BD con este enum (útil en siguientes partes). */
+    /** Compara el rol del token o BD con este enum. */
     public boolean coincide(Long rolId) {
         return rolId != null && rolId.equals(id);
     }
