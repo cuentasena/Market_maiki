@@ -17,6 +17,7 @@ import com.mifichafavorita.gestionusuarios.enums.RolEnum;
 import com.mifichafavorita.gestionusuarios.service.UserService;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -115,7 +116,7 @@ public class UserController {
      */
     @PatchMapping("/mi-cuenta")
     public ResponseEntity<HttpGlobalResponse<UserResponseDTO>> actualizarMiCuenta(HttpServletRequest httpRequest,
-            @RequestBody ActualizarCuentaRequestDTO request) {
+            @Valid @RequestBody ActualizarCuentaRequestDTO request) {
         try {
             Long rolId = (Long) httpRequest.getAttribute("rolId");
             if (!RolEnum.USUARIO.coincide(rolId)) {

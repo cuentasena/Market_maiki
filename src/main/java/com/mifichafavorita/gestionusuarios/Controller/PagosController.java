@@ -12,6 +12,7 @@ import com.mifichafavorita.gestionusuarios.dto.PagoRequestDTO;
 import com.mifichafavorita.gestionusuarios.enums.RolEnum;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -24,7 +25,7 @@ public class PagosController {
      */
     @PostMapping("/procesar")
     public ResponseEntity<HttpGlobalResponse<String>> procesarPago(HttpServletRequest httpRequest,
-            @RequestBody PagoRequestDTO request) {
+            @Valid @RequestBody PagoRequestDTO request) {
         try {
             Long rolId = (Long) httpRequest.getAttribute("rolId");
 
@@ -32,12 +33,6 @@ public class PagosController {
                 HttpGlobalResponse<String> denied = new HttpGlobalResponse<>();
                 denied.setMessage("No tiene permiso para procesar pagos (solo cajero)");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(denied);
-            }
-
-            if (request.getMonto() == null || request.getMonto() <= 0) {
-                HttpGlobalResponse<String> bad = new HttpGlobalResponse<>();
-                bad.setMessage("El monto debe ser mayor que cero");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(bad);
             }
 
             HttpGlobalResponse<String> ok = new HttpGlobalResponse<>();

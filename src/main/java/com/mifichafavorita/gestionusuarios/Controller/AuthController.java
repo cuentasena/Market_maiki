@@ -11,6 +11,7 @@ import com.mifichafavorita.gestionusuarios.dto.RegisterResponseDTO;
 import com.mifichafavorita.gestionusuarios.service.AuthService;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
@@ -35,13 +36,15 @@ public class AuthController {
      * @return RegisterResponseDTO
      */
     @PostMapping("/register")
-    public ResponseEntity<RegisterResponseDTO> register(@RequestBody RegisterRequestDTO request) {
+    public ResponseEntity<RegisterResponseDTO> register(@Valid @RequestBody RegisterRequestDTO request) {
         try {
             RegisterResponseDTO response = authService.register(request);
             return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            RegisterResponseDTO err = new RegisterResponseDTO();
+            err.setMessage("Error al registrar");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(err);
         }
     }
 
@@ -52,13 +55,15 @@ public class AuthController {
      * @return HttpGlobalResponse<JwtDTO>
      */
     @PostMapping("/login")
-    public ResponseEntity<HttpGlobalResponse<JwtDTO>> login(@RequestBody LoginRequestDTO request) {
+    public ResponseEntity<HttpGlobalResponse<JwtDTO>> login(@Valid @RequestBody LoginRequestDTO request) {
         try {
             HttpGlobalResponse<JwtDTO> response = authService.login(request);
             return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            HttpGlobalResponse<JwtDTO> err = new HttpGlobalResponse<>();
+            err.setMessage("Error en el inicio de sesión");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(err);
         }
     }
 
